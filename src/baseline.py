@@ -9,7 +9,7 @@ from datasets import Dataset
 import torch as t
 from torch.utils.data import WeightedRandomSampler, DataLoader, TensorDataset
 from torch.optim import AdamW
-from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sklearn.model_selection import StratifiedKFold
 
 #%%
@@ -34,6 +34,8 @@ labels_list = data_df['device']
 skf = StratifiedKFold(n_splits=5, random_state=None, shuffle=True)
 
 #%% Loop, K fold cross validation
+
+cv_results = []
 
 for i, (train_index, test_index) in enumerate(skf.split(data_df, labels_list)):
 
@@ -136,8 +138,35 @@ for i, (train_index, test_index) in enumerate(skf.split(data_df, labels_list)):
                 all_preds.extend(preds.cpu().numpy())
                 all_labels.extend(batch["labels"].cpu().numpy())
         
-        print(classification_report(all_labels, all_preds, target_names=["literal", "metaphor"]))
-
         t.cuda.empty_cache()
+        
+    accuracy = accuracy_score(all_labels, all_preds)
 
+    precision, recall, f1, support = precision_recall_fscore_support(
+        all_labels, all_preds, average=None, labels=[0, 1]
+    )
+    macro_precision, macro_recall, macro_f1, _ = precision_recall_fscore_support(
+        all_labels, all_preds, average='macro'
+    )
+    
+    cv_results.append({
+        'fold': i+1,
+        'accuracy': accuracy,
+        'literal_precision': precision[0],
+        'literal_recall': recall[0],
+        'literal_f1': f1[0],
+        'metaphor_precision': precision[1],
+        'metaphor_recall': recall[1],
+        'metaphor_f1': f1[1],
+        'macro_precision': macro_precision,
+        'macro_recall': macro_recall,
+        'macro_f1': macro_f1
+    })
 #%%
+
+results_df = pd.DataFrame(cv_results)
+
+results_df.to_csv(f'../results/{task}_baseline_5cv.csv', index=False)
+print(f"\nResults saved to '../results/{task}_baseline_5cv.csv'")
+
+# %%
