@@ -14,6 +14,19 @@ class ReadTSV:
 
         return self.df
 
+    def clean_data(self):
+        if self.df is None:
+            self.read_tsv()
+        training_df = self.df
+        columns = ["device", "rhyme"]
+
+        for col in columns:
+            training_df[col] = training_df[col].fillna("literal")
+            training_df[col] = training_df[col].astype(str)
+            training_df[col] = training_df[col].str.lower().str.strip().str.split(',').str[0].str.strip()
+        return training_df
+
+
     def split_data(self, split_index=2160):
         if self.df is None:
             self.read_tsv()
