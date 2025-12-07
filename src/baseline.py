@@ -25,7 +25,7 @@ data = ReadTSV(annotation_path)
 data_df = data.clean_data()
 #%% Select task: metaphor, simile, alliteration
 
-task = "metaphor"
+task = "alliteration"
 data_df.loc[data_df['device'] != task, 'device']= 'literal'
 
 #%%
@@ -167,11 +167,11 @@ for i, (train_index, test_index) in enumerate(skf.split(data_df, labels_list)):
 results_df = pd.DataFrame(cv_results)
 
 print(f"Accuracy:   {results_df['accuracy'].mean():.4f} ± {results_df['accuracy'].std():.4f}")
-print(f"\nLiteral:")
+print(f"\nAlliteration:")
 print(f"Precision:    {results_df['literal_precision'].mean():.4f} ± {results_df['literal_precision'].std():.4f}")
 print(f"Recall:       {results_df['literal_recall'].mean():.4f} ± {results_df['literal_recall'].std():.4f}")
 print(f"F1:           {results_df['literal_f1'].mean():.4f} ± {results_df['literal_f1'].std():.4f}")
-print(f"\nMetaphor:")
+print(f"\n:Literal")
 print(f"Precision:    {results_df['metaphor_precision'].mean():.4f} ± {results_df['metaphor_precision'].std():.4f}")
 print(f"Recall:       {results_df['metaphor_recall'].mean():.4f} ± {results_df['metaphor_recall'].std():.4f}")
 print(f"F1:           {results_df['metaphor_f1'].mean():.4f} ± {results_df['metaphor_f1'].std():.4f}")
