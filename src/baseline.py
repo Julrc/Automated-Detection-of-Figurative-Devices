@@ -166,6 +166,20 @@ for i, (train_index, test_index) in enumerate(skf.split(data_df, labels_list)):
 
 results_df = pd.DataFrame(cv_results)
 
+print(f"Accuracy:   {results_df['accuracy'].mean():.4f} ± {results_df['accuracy'].std():.4f}")
+print(f"\nLiteral:")
+print(f"Precision:    {results_df['literal_precision'].mean():.4f} ± {results_df['literal_precision'].std():.4f}")
+print(f"Recall:       {results_df['literal_recall'].mean():.4f} ± {results_df['literal_recall'].std():.4f}")
+print(f"F1:           {results_df['literal_f1'].mean():.4f} ± {results_df['literal_f1'].std():.4f}")
+print(f"\nMetaphor:")
+print(f"Precision:    {results_df['metaphor_precision'].mean():.4f} ± {results_df['metaphor_precision'].std():.4f}")
+print(f"Recall:       {results_df['metaphor_recall'].mean():.4f} ± {results_df['metaphor_recall'].std():.4f}")
+print(f"F1:           {results_df['metaphor_f1'].mean():.4f} ± {results_df['metaphor_f1'].std():.4f}")
+print(f"\nAverages:")
+print(f"Precision:    {results_df['macro_precision'].mean():.4f} ± {results_df['macro_precision'].std():.4f}")
+print(f"Recall:       {results_df['macro_recall'].mean():.4f} ± {results_df['macro_recall'].std():.4f}")
+print(f"F1:           {results_df['macro_f1'].mean():.4f} ± {results_df['macro_f1'].std():.4f}")
+
 results_df.to_csv(f'../results/{task}_baseline_5cv.csv', index=False)
 print(f"\nResults saved to '../results/{task}_baseline_5cv.csv'")
 
