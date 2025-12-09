@@ -23,6 +23,7 @@ annotation_path = '../data/nlp_annots.tsv'
 data = ReadTSV(annotation_path)
 
 data_df = data.clean_data()
+
 #%% Select task: metaphor, simile, alliteration
 
 task = "alliteration"
