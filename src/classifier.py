@@ -5,6 +5,7 @@ from utils.training import count_parameters
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
 import evaluate
 import numpy as np
+import re
 from datasets import Dataset
 import torch as t
 from torch.utils.data import WeightedRandomSampler, DataLoader, TensorDataset
@@ -28,6 +29,13 @@ data_df = data.clean_data()
 
 task = "alliteration"
 data_df.loc[data_df['device'] != task, 'device']= 'literal'
+
+if task == "alliteration":
+    device_regex = r"\b([a-z])\w*\W+\1"
+elif task == "metaphor":
+    device_regex = r"\bis (?:a|an|the)\b|\w+ of \w+"
+elif task == "simile":
+    device_regex = r"\b(like|as)\b"
 
 #%%
 
@@ -135,12 +143,24 @@ for i, (train_index, test_index) in enumerate(skf.split(data_df, labels_list)):
             for batch in eval_loader:
                 batch = {k: v.to(device) for k, v in batch.items()}
                 outputs = model(**batch)
-                preds = t.argmax(outputs.logits, dim=-1)
-                all_preds.extend(preds.cpu().numpy())
+                bert_batch_preds = t.argmax(outputs.logits, dim=-1)
+
+                decoded_text = tokenizer.batch_decode(batch["input_ids"], skip_special_tokens=True)
+
+                final_batch_preds = []
+
+                for text, bert_pred in zip(decoded_text, bert_batch_preds):
+                    if re.search(device_regex, text, re.IGNORECASE):
+                        final_batch_preds.append(bert_pred.cpu().item())
+                    else:
+                        final_batch_preds.append(0)
+
+                all_preds.extend(final_batch_preds)
                 all_labels.extend(batch["labels"].cpu().numpy())
         
         t.cuda.empty_cache()
-        
+
+    t.cuda.empty_cache()
     accuracy = accuracy_score(all_labels, all_preds)
 
     precision, recall, f1, support = precision_recall_fscore_support(
@@ -163,6 +183,7 @@ for i, (train_index, test_index) in enumerate(skf.split(data_df, labels_list)):
         'macro_recall': macro_recall,
         'macro_f1': macro_f1
     })
+
 #%%
 
 results_df = pd.DataFrame(cv_results)
@@ -172,7 +193,7 @@ print(f"\nAlliteration:")
 print(f"Precision:    {results_df['literal_precision'].mean():.4f} ± {results_df['literal_precision'].std():.4f}")
 print(f"Recall:       {results_df['literal_recall'].mean():.4f} ± {results_df['literal_recall'].std():.4f}")
 print(f"F1:           {results_df['literal_f1'].mean():.4f} ± {results_df['literal_f1'].std():.4f}")
-print(f"\n:Literal")
+print(f"\nLiteral")
 print(f"Precision:    {results_df['metaphor_precision'].mean():.4f} ± {results_df['metaphor_precision'].std():.4f}")
 print(f"Recall:       {results_df['metaphor_recall'].mean():.4f} ± {results_df['metaphor_recall'].std():.4f}")
 print(f"F1:           {results_df['metaphor_f1'].mean():.4f} ± {results_df['metaphor_f1'].std():.4f}")
@@ -185,3 +206,5 @@ results_df.to_csv(f'../results/{task}_baseline_5cv.csv', index=False)
 print(f"\nResults saved to '../results/{task}_baseline_5cv.csv'")
 
 # %%
+
+
