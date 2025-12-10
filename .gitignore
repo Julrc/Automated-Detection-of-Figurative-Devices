@@ -5,3 +5,5 @@ results/
 *.pyc
 .DS_Store
 wandb/
+requirements.txt
+notes.txt
